@@ -237,5 +237,5 @@ async def Automation(commands: list[str]):
     return True
 
 if __name__ == "__main__":
-    asyncio.run(Automation(["open whatsapp", "close camera", "play akhiyon se goli mare"]))
+    asyncio.run(Automation(["open whatsapp"]))
     
