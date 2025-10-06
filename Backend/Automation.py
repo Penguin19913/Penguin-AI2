@@ -15,6 +15,7 @@ import requests
 import keyboard
 import asyncio
 import os
+import ctypes
 
 env_vars = dotenv_values(".env")
 GroqAPIKey = env_vars.get("GroqAPIKey")
@@ -148,17 +149,34 @@ def CloseApp(app):
             return False
         
 def System(command):
+    # Use Windows virtual-key codes for reliable media key events
+    # VK_VOLUME_MUTE = 0xAD, VK_VOLUME_DOWN = 0xAE, VK_VOLUME_UP = 0xAF
+    def _press_vk(vk_code: int):
+        try:
+            # key down
+            ctypes.windll.user32.keybd_event(vk_code, 0, 0, 0)
+            # key up
+            ctypes.windll.user32.keybd_event(vk_code, 0, 2, 0)
+        except Exception:
+            # fallback to keyboard module if ctypes fails
+            if vk_code == 0xAD:
+                keyboard.press_and_release("volume mute")
+            elif vk_code == 0xAF:
+                keyboard.press_and_release("volume up")
+            elif vk_code == 0xAE:
+                keyboard.press_and_release("volume down")
 
     def mute():
-        keyboard.press_and_release("volume mute")
+        _press_vk(0xAD)
 
     def unmute():
-        keyboard.press_and_release("volume mute")
+        _press_vk(0xAD)
 
     def volume_up():
-        keyboard.press_and_release("volume up")
+        _press_vk(0xAF)
 
     def volume_down():
+        _press_vk(0xAE)
         keyboard.press_and_release("volume down")
 
     if command == "mute":
@@ -237,5 +255,5 @@ async def Automation(commands: list[str]):
     return True
 
 if __name__ == "__main__":
-    asyncio.run(Automation(["open whatsapp"]))
+    asyncio.run(Automation(["system mute"]))
     

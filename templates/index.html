@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoFlow - Intelligent Process Controller</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .shutdown-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid rgba(113, 128, 150, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            background: rgba(248, 250, 252, 0.8);
+            color: #718096;
+            transition: all 0.2s ease;
+            text-transform: none;
+            letter-spacing: normal;
+            min-width: auto;
+            box-shadow: none;
+        }
+        
+        .shutdown-btn:hover {
+            background: rgba(113, 128, 150, 0.1);
+            border-color: rgba(113, 128, 150, 0.5);
+            color: #4a5568;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .shutdown-btn::before {
+            display: none;
+        }
+        
+        .shutdown-btn i {
+            font-size: 12px;
+            margin-right: 4px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 48px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #4a5568, #2d3748);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #718096;
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 140px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: 2px solid transparent;
+        }
+        
+        .btn-start:hover:not(:disabled) {
+            background: linear-gradient(135deg, #38a169, #2f855a);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+            border: 2px solid transparent;
+        }
+        
+        .btn-stop:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3);
+        }
+        
+
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn:disabled::before {
+            display: none;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .status-container {
+            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 30px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .status-label {
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #2d3748;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-label i {
+            margin-right: 8px;
+            color: #667eea;
+        }
+        
+        .status-text {
+            font-size: 16px;
+            padding: 16px 20px;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .status-running {
+            color: #38a169;
+            background: linear-gradient(145deg, #f0fff4, #c6f6d5);
+            border-color: rgba(72, 187, 120, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-stopped {
+            color: #e53e3e;
+            background: linear-gradient(145deg, #fff5f5, #fed7d7);
+            border-color: rgba(245, 101, 101, 0.3);
+        }
+        
+        .status-ready {
+            color: #3182ce;
+            background: linear-gradient(145deg, #ebf8ff, #bee3f8);
+            border-color: rgba(49, 130, 206, 0.3);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: none;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .message.success {
+            background: linear-gradient(145deg, #f0fff4, #c6f6d5);
+            color: #22543d;
+            border: 2px solid rgba(72, 187, 120, 0.3);
+        }
+        
+        .message.error {
+            background: linear-gradient(145deg, #fff5f5, #fed7d7);
+            color: #742a2a;
+            border: 2px solid rgba(245, 101, 101, 0.3);
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .logo {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        h1 {
+            background: linear-gradient(45deg, #4a5568, #2d3748);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 24px;
+                padding-top: 50px;
+            }
+            
+            .shutdown-btn {
+                top: 12px;
+                right: 12px;
+                font-size: 11px;
+                padding: 6px 8px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .logo {
+                font-size: 36px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .btn {
+                padding: 14px 24px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="shutdownBtn" class="shutdown-btn">
+            <i class="fas fa-power-off"></i>
+            Exit
+        </button>
+        
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <h1>Penguin</h1>
+            <div class="subtitle">Intelligent Process Controller</div>
+        </div>
+        
+        <div class="button-container">
+            <button id="startBtn" class="btn btn-start">
+                <i class="fas fa-microphone"></i>
+                Start Listening
+            </button>
+            <button id="stopBtn" class="btn btn-stop" disabled>
+                <i class="fas fa-microphone-slash"></i>
+                Stop Listening
+            </button>
+        </div>
+        
+        <div class="status-container">
+            <div class="status-label">
+                <i class="fas fa-info-circle"></i>
+                System Status
+            </div>
+            <div id="statusText" class="status-text status-ready">
+                <i class="fas fa-check-circle status-icon"></i>
+                Ready to Launch
+            </div>
+        </div>
+        
+        <div id="message" class="message"></div>
+    </div></body>
+
+    <script>
+        let isRunning = false;
+        let statusInterval;
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const shutdownBtn = document.getElementById('shutdownBtn');
+        const statusText = document.getElementById('statusText');
+        const messageDiv = document.getElementById('message');
+
+        function showMessage(text, isSuccess = true) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${isSuccess ? 'success' : 'error'}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateButtons() {
+            startBtn.disabled = isRunning;
+            stopBtn.disabled = !isRunning;
+        }
+
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    isRunning = data.running;
+                    updateButtons();
+                    
+                    let icon = '<i class="fas fa-check-circle status-icon"></i>';
+                    let statusClass = 'status-ready';
+                    
+                    if (data.running) {
+                        icon = '<span class="loading"></span>';
+                        statusClass = 'status-running';
+                    } else if (data.status.includes('Error')) {
+                        icon = '<i class="fas fa-exclamation-triangle status-icon"></i>';
+                        statusClass = 'status-stopped';
+                    } else if (data.status.includes('Completed')) {
+                        icon = '<i class="fas fa-check-circle status-icon"></i>';
+                        statusClass = 'status-ready';
+                    } else if (data.status.includes('Stopped')) {
+                        icon = '<i class="fas fa-stop-circle status-icon"></i>';
+                        statusClass = 'status-stopped';
+                    }
+                    
+                    statusText.innerHTML = icon + data.status;
+                    statusText.className = 'status-text ' + statusClass;
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }
+
+        function startProcess() {
+            fetch('/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage(data.message, true);
+                        // Start polling for status updates
+                        statusInterval = setInterval(updateStatus, 500);
+                    } else {
+                        showMessage(data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('Error starting process', false);
+                    console.error('Error:', error);
+                });
+        }
+
+        function stopProcess() {
+            fetch('/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage(data.message, true);
+                        clearInterval(statusInterval);
+                        updateStatus(); // Final status update
+                    } else {
+                        showMessage(data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('Error stopping process', false);
+                    console.error('Error:', error);
+                });
+        }
+
+        function shutdownServer() {
+            if (confirm('Are you sure you want to shut down the server? This will close the application.')) {
+                showMessage('Server is shutting down...', true);
+                
+                fetch('/shutdown', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Try multiple methods to close the window/tab
+                            setTimeout(() => {
+                                // Method 1: Standard window.close()
+                                window.close();
+                                
+                                // Method 2: If that doesn't work, try to navigate away
+                                setTimeout(() => {
+                                    window.location.href = 'about:blank';
+                                }, 500);
+                                
+                                // Method 3: If still open, show final message
+                                setTimeout(() => {
+                                    document.body.innerHTML = '<div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;"><h2>Server has been shut down successfully</h2><p>You can now close this tab manually.</p></div>';
+                                }, 1000);
+                            }, 1500);
+                        } else {
+                            showMessage('Error shutting down server', false);
+                        }
+                    })
+                    .catch(error => {
+                        // Server shutdown was initiated, connection lost (expected behavior)
+                        setTimeout(() => {
+                            // Try multiple methods to close
+                            window.close();
+                            
+                            setTimeout(() => {
+                                window.location.href = 'about:blank';
+                            }, 500);
+                            
+                            setTimeout(() => {
+                                document.body.innerHTML = '<div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;"><h2>Server has been shut down successfully</h2><p>You can now close this tab manually.</p></div>';
+                            }, 1000);
+                        }, 1500);
+                    });
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startProcess);
+        stopBtn.addEventListener('click', stopProcess);
+        shutdownBtn.addEventListener('click', shutdownServer);
+
+        // Initial status check
+        updateStatus();
+        
+        // Periodic status updates when not running
+        setInterval(() => {
+            if (!isRunning) {
+                updateStatus();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
